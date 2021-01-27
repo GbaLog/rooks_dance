@@ -17,4 +17,7 @@ set(SRC_LIST
   ConcurrentQueue.h
   CommonTypes.h)
 
+find_package(Threads REQUIRED)
+
 add_executable(${PROJECT_NAME} ${SRC_LIST})
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)

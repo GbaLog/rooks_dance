@@ -1,8 +1,7 @@
 #include "BoardMng.h"
-#include <thread>
-#include <cassert>
 #include <iostream>
 #include "RookHandler.h"
+#include "FieldDrawer.h"
 
 BoardMng::BoardMng(int argc, char ** argv) :
   _rookCount(0),
@@ -25,24 +24,8 @@ int BoardMng::run()
     }
 
     std::shared_lock lock(_fieldMutex);
+    drawField(_field);
 
-    std::cout << "    a   b   c   d   e   f   g   h  \n"
-                 "  +---+---+---+---+---+---+---+---+\n";
-    for (int i = 0; i < 8; ++i)
-    {
-      std::cout << i + 1 << " ";
-      for (int j = 0; j < 8; ++j)
-      {
-        if (_field[i][j] == 0)
-          std::cout << "+   ";
-        else
-          std::cout << "+ " << _field[i][j] << " ";
-      }
-      std::cout << "+ " << 8 - i << "\n";
-      std::cout << "  +---+---+---+---+---+---+---+---+\n";
-    }
-
-    std::cout << "    a   b   c   d   e   f   g   h  " << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
   return 0;

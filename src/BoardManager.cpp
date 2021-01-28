@@ -168,7 +168,7 @@ void BoardManager::processLogMsg(Log::Message msg)
   case Log::Type::NextPosition:
     {
       auto & mv = std::get<Log::NextPosition>(msg._body);
-      std::cout << "Rook(" << mv._id  << ")'s will go to " << mv._new
+      std::cout << "Rook(" << mv._id  << ") will go to " << mv._new
                 << ", moves remain: " << mv._movesRemain << std::endl;
       break;
     }

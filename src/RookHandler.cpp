@@ -1,6 +1,6 @@
 #include "RookHandler.h"
 #include <thread>
-
+//-----------------------------------------------------------------------------
 RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosition & pos) :
   _owner(owner),
   _id(id),
@@ -9,7 +9,7 @@ RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosit
   _movesMade(0),
   _rand(id)
 {}
-
+//-----------------------------------------------------------------------------
 void RookHandler::run()
 {
   _wholeMoveExpire = std::chrono::steady_clock::now() + std::chrono::seconds(5);
@@ -46,7 +46,7 @@ void RookHandler::run()
     std::this_thread::sleep_until(now);
   }
 }
-
+//-----------------------------------------------------------------------------
 RookPosition RookHandler::genNextPos()
 {
   RookPosition newPos;
@@ -66,15 +66,16 @@ RookPosition RookHandler::genNextPos()
 
   return newPos;
 }
-
+//-----------------------------------------------------------------------------
 void RookHandler::genNewPosAndResetTimer(const TimePointType & now)
 {
   _nextPos = genNextPos();
   _wholeMoveExpire = now + std::chrono::seconds(5);
 }
-
+//-----------------------------------------------------------------------------
 int RookHandler::generateInt(int min, int max)
 {
   std::uniform_int_distribution<> dist(min, max);
   return dist(_rand);
 }
+//-----------------------------------------------------------------------------

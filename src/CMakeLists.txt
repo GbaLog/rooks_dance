@@ -13,7 +13,8 @@ set(SRC_LIST
   BoardMng.h
 
   ConcurrentQueue.h
-  CommonTypes.h)
+  CommonTypes.h
+  FieldDrawer.h)
 
 find_package(Threads REQUIRED)
 

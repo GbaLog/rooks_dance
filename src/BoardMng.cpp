@@ -2,7 +2,7 @@
 #include <iostream>
 #include "RookHandler.h"
 #include "FieldDrawer.h"
-
+//-----------------------------------------------------------------------------
 BoardMng::BoardMng(int argc, char ** argv) :
   _rookCount(0),
   _run(false),
@@ -10,7 +10,7 @@ BoardMng::BoardMng(int argc, char ** argv) :
 {
   parseArgs(argc, argv);
 }
-
+//-----------------------------------------------------------------------------
 int BoardMng::run()
 {
   _run = true;
@@ -24,7 +24,7 @@ int BoardMng::run()
     }
 
     {
-      std::shared_lock lock(_fieldMutex);
+      std::lock_guard lock(_fieldMutex);
       drawField(_field);
     }
 
@@ -32,35 +32,36 @@ int BoardMng::run()
   }
   return 0;
 }
-
+//-----------------------------------------------------------------------------
 void BoardMng::stop()
 {
   std::cout << "Stop the application" << std::endl;
   _run = false;
 }
-
+//-----------------------------------------------------------------------------
 bool BoardMng::tryMoveRook(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
 {
-  std::unique_lock lock(_fieldMutex);
+  std::lock_guard lock(_fieldMutex);
 
   if (hasPathCollision(oldPos, newPos))
     return false;
+
   std::cout << "Move rook(" << id << ") from " << oldPos << " to " << newPos << std::endl;
   _field[oldPos._x][oldPos._y] = 0;
   _field[newPos._x][newPos._y] = id;
   return true;
 }
-
+//-----------------------------------------------------------------------------
 // Нельзя ждать поток в этой функции, потому что она, очевидно, будет вечно ждать...
 void BoardMng::onRookFinished(uint32_t id)
 {
-  std::unique_lock lock(_fieldMutex);
+  std::lock_guard lock(_fieldMutex);
   auto node = _activeThreads.extract(id);
   if (node.empty())
     return;
   _terminatingQueue.push(std::move(node));
 }
-
+//-----------------------------------------------------------------------------
 void BoardMng::parseArgs(int argc, char ** argv)
 {
   uint32_t rooksCount = 6;
@@ -68,13 +69,14 @@ void BoardMng::parseArgs(int argc, char ** argv)
   if (argc == 2)
   {
     rooksCount = std::stoi(argv[1]);
-    if (rooksCount > 6)
-      rooksCount = 6;
   }
+
+  if (rooksCount > 6 || rooksCount < 0)
+    rooksCount = 6;
 
   _rookCount = rooksCount;
 }
-
+//-----------------------------------------------------------------------------
 void BoardMng::spawnRooks(uint32_t n)
 {
   RookPosition basePos;
@@ -94,7 +96,7 @@ void BoardMng::spawnRooks(uint32_t n)
     ++id;
   }
 }
-
+//-----------------------------------------------------------------------------
 void BoardMng::terminateRook(uint32_t id, std::thread thread)
 {
   std::cout << "Rook(" << id << ") is finished, terminate the thread" << std::endl;
@@ -108,7 +110,7 @@ void BoardMng::terminateRook(uint32_t id, std::thread thread)
     stop();
   }
 }
-
+//-----------------------------------------------------------------------------
 bool BoardMng::hasPathCollision(const RookPosition & oldPos, const RookPosition & newPos) const
 {
   if (oldPos._x != newPos._x)
@@ -140,4 +142,4 @@ bool BoardMng::hasPathCollision(const RookPosition & oldPos, const RookPosition 
 
   return false;
 }
-
+//-----------------------------------------------------------------------------

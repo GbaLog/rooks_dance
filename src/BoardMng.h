@@ -1,14 +1,13 @@
 #ifndef BOARDMNG_H
 #define BOARDMNG_H
-
+//-----------------------------------------------------------------------------
 #include <map>
-#include <shared_mutex>
+#include <mutex>
 #include <thread>
-#include <atomic>
 #include "RookHandler.h"
 #include "CommonTypes.h"
 #include "ConcurrentQueue.h"
-
+//-----------------------------------------------------------------------------
 class BoardMng : public IRookHandlerOwner
 {
 public:
@@ -24,14 +23,14 @@ public:
 
 private:
   uint32_t _rookCount;
-  std::atomic_bool _run;
+  bool _run;
   using MapIdToRookThread = std::map<uint32_t, std::thread>;
   using MapIdToRookThreadNode = MapIdToRookThread::node_type;
   MapIdToRookThread _activeThreads;
 
-  ConcurrentQueue<MapIdToRookThread::node_type> _terminatingQueue;
+  ConcurrentQueue<MapIdToRookThreadNode> _terminatingQueue;
 
-  std::shared_mutex _fieldMutex;
+  std::mutex _fieldMutex;
   FieldRows _field;
 
   void parseArgs(int argc, char ** argv);
@@ -40,5 +39,6 @@ private:
 
   bool hasPathCollision(const RookPosition & oldPos, const RookPosition & newPos) const;
 };
-
+//-----------------------------------------------------------------------------
 #endif // BOARDMNG_H
+//-----------------------------------------------------------------------------

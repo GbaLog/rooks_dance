@@ -1,9 +1,9 @@
 #ifndef FIELDDRAWER_H
 #define FIELDDRAWER_H
-
+//-----------------------------------------------------------------------------
 #include "CommonTypes.h"
 #include <iostream>
-
+//-----------------------------------------------------------------------------
 inline
 void drawField(const FieldRows & field)
 {
@@ -24,5 +24,6 @@ void drawField(const FieldRows & field)
   }
   std::cout << "    a   b   c   d   e   f   g   h  " << std::endl;
 }
-
+//-----------------------------------------------------------------------------
 #endif // FIELDDRAWER_H
+//-----------------------------------------------------------------------------

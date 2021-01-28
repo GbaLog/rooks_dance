@@ -1,23 +1,21 @@
 #ifndef ROOKHANDLER_H
 #define ROOKHANDLER_H
-
+//-----------------------------------------------------------------------------
 #include <random>
 #include "Rook.h"
 #include "CommonTypes.h"
-
+//-----------------------------------------------------------------------------
 struct IRookHandlerOwner
 {
   virtual ~IRookHandlerOwner() = default;
 
   // Если на пути нет препятствий, то переставляет ладью на новую позицию.
-  // Возвращает результат вычисления.
   virtual bool tryMoveRook(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos) = 0;
 
   // Сообщает, что эта ладья сделала 50 ходов.
   virtual void onRookFinished(uint32_t id) = 0;
 };
-
-// Обработчик ходов ладьи. Живёт полностью в другом потоке.
+//-----------------------------------------------------------------------------
 class RookHandler
 {
 public:
@@ -45,5 +43,6 @@ private:
   void genNewPosAndResetTimer(const TimePointType & now);
   int generateInt(int min, int max);
 };
-
+//-----------------------------------------------------------------------------
 #endif // ROOKHANDLER_H
+//-----------------------------------------------------------------------------

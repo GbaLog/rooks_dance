@@ -1,7 +1,16 @@
 #include "BoardMng.h"
-
+#include <iostream>
+//-----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-  BoardMng mng{argc, argv};
-  return mng.run();
+  try
+  {
+    BoardMng mng{argc, argv};
+    return mng.run();
+  }
+  catch (const std::exception & ex)
+  {
+    std::cerr << "Exception occured: " << ex.what() << std::endl;
+    return EXIT_FAILURE;
+  }
 }

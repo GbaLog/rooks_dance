@@ -9,8 +9,8 @@ set(SRC_LIST
   Rook.h
   RookHandler.cpp
   RookHandler.h
-  BoardMng.cpp
-  BoardMng.h
+  BoardManager.cpp
+  BoardManager.h
 
   ConcurrentQueue.h
   CommonTypes.h

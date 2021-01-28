@@ -1,4 +1,4 @@
-#include "BoardMng.h"
+#include "BoardManager.h"
 #include <iostream>
 #include <string_view>
 //-----------------------------------------------------------------------------
@@ -18,10 +18,10 @@ BoardMngParams parseArgs(int argc, char ** argv)
     res._rookCount = std::stoi(argv[1]);
   }
 
-  if (res._rookCount > 6)
-    res._rookCount = 6;
-  if (res._rookCount < 1)
-    res._rookCount = 1;
+  if (res._rookCount > 6 || res._rookCount < 4)
+  {
+    throw std::invalid_argument{"Range of rooks must be from 4 to 6"};
+  }
 
   return res;
 }
@@ -32,8 +32,14 @@ int main(int argc, char *argv[])
   {
     BoardMngParams params = parseArgs(argc, argv);
 
-    BoardMng mng{params};
+    BoardManager mng{params};
     return mng.run();
+  }
+  catch (const std::invalid_argument & ex)
+  {
+    std::cout << "Error occured, you possibly enter wrong arguments: " << ex.what() << std::endl;
+    std::cerr << "USAGE: " << argv[0] << " <number-of-rooks> [--nofield]" << std::endl;
+    return EXIT_FAILURE;
   }
   catch (const std::exception & ex)
   {

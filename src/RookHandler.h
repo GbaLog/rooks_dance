@@ -18,7 +18,7 @@ struct IRookHandlerOwner
   virtual void onRookFinished(uint32_t id) = 0;
 
   virtual void onMoveExpired(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos) = 0;
-  virtual void onWayChosen(uint32_t id, const RookPosition & newPos) = 0;
+  virtual void onWayChosen(uint32_t id, const RookPosition & newPos, uint32_t movesRemain) = 0;
 };
 //-----------------------------------------------------------------------------
 class RookHandler
@@ -54,7 +54,6 @@ private:
   void runInThread();
 
   RookPosition genNextPos();
-  void resetWholeTimer(const TimePointType & now);
   void onWholeTimerExpired(const TimePointType & now);
   void onMoveMade(const TimePointType & now);
   int generateInt(int min, int max);

@@ -1,13 +1,14 @@
 #include "RookHandler.h"
 #include <thread>
+#include <iostream>
 //-----------------------------------------------------------------------------
 RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosition & pos, uint32_t seed) :
-  _owner(owner),
-  _id(id),
-  _run(false),
-  _rand(seed),
-  _currentPos(pos),
-  _movesMade(0)
+  _owner{owner},
+  _id{id},
+  _run{false},
+  _rand{seed},
+  _currentPos{pos},
+  _movesMade{0}
 {}
 //-----------------------------------------------------------------------------
 RookHandler::~RookHandler()
@@ -44,8 +45,6 @@ void RookHandler::runInThread()
 
     if (_moveExpire <= now)
     {
-      // BUG: тут такой момент, в конце концов все ладьи могут окружить одну,
-      // в результате чего она не сможет никогда закончить ходить.
       if (_owner.tryMoveRook(_id, _currentPos, _nextPos))
       {
         onMoveMade(now);
@@ -97,11 +96,11 @@ void RookHandler::onWholeTimerExpired(const TimePointType & now)
 //-----------------------------------------------------------------------------
 void RookHandler::onMoveMade(const TimePointType & now)
 {
-  _currentPos = _nextPos;
   ++_movesMade;
+  _currentPos = _nextPos;
   _nextPos = genNextPos();
   _wholeMoveExpire = now + std::chrono::seconds(5);
-  _owner.onWayChosen(_id, _nextPos);
+  _owner.onWayChosen(_id, _nextPos, MaxMovesCount - _movesMade);
 }
 //-----------------------------------------------------------------------------
 int RookHandler::generateInt(int min, int max)

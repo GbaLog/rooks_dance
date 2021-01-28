@@ -1,4 +1,4 @@
-#include "BoardMng.h"
+#include "BoardManager.h"
 #include <iostream>
 #include <random>
 #include "RookHandler.h"
@@ -8,24 +8,24 @@ namespace
 {
 //-----------------------------------------------------------------------------
 template<class T, class ... Args>
-Log::Message makeLogMsg(Log::Type type, Args &&... args)
+Log::Message makeLogMsg(Args &&... args)
 {
   Log::Message msg;
-  msg._type = type;
+  msg._type = T::type();
   msg._body = T{std::forward<Args>(args)...};
   return msg;
 }
 //-----------------------------------------------------------------------------
 } // namespace
 //-----------------------------------------------------------------------------
-BoardMng::BoardMng(const BoardMngParams & params) :
+BoardManager::BoardManager(const BoardMngParams & params) :
   _rookCount{params._rookCount},
   _noField{params._noField},
   _run{false},
   _field{}
 {}
 //-----------------------------------------------------------------------------
-int BoardMng::run()
+int BoardManager::run()
 {
   _run = true;
   spawnRooks(_rookCount);
@@ -33,27 +33,30 @@ int BoardMng::run()
   return 0;
 }
 //-----------------------------------------------------------------------------
-void BoardMng::stop()
+void BoardManager::stop()
 {
   std::cout << "Stop the application" << std::endl;
   _run = false;
 }
 //-----------------------------------------------------------------------------
-bool BoardMng::tryMoveRook(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
+bool BoardManager::tryMoveRook(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
 {
   std::lock_guard lock(_fieldMutex);
+
+  // BUG: тут такой момент, в конце концов все ладьи могут окружить одну,
+  // в результате чего она не сможет никогда закончить ходить.
 
   if (hasPathCollision(oldPos, newPos))
     return false;
 
-  _logQueue.push(makeLogMsg<Log::MoveMade>(Log::Type::MoveMade, id, oldPos, newPos));
+  _logQueue.push(makeLogMsg<Log::MoveMade>(id, oldPos, newPos));
   _field[oldPos._x][oldPos._y] = 0;
   _field[newPos._x][newPos._y] = id;
   return true;
 }
 //-----------------------------------------------------------------------------
 // Нельзя ждать поток в этой функции, потому что она, очевидно, будет вечно ждать...
-void BoardMng::onRookFinished(uint32_t id)
+void BoardManager::onRookFinished(uint32_t id)
 {
   std::lock_guard lock(_fieldMutex);
   auto node = _activeHandlers.extract(id);
@@ -62,29 +65,28 @@ void BoardMng::onRookFinished(uint32_t id)
   _terminatingQueue.push(std::move(node.mapped()));
 }
 //-----------------------------------------------------------------------------
-void BoardMng::onMoveExpired(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
+void BoardManager::onMoveExpired(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
 {
-  _logQueue.push(makeLogMsg<Log::MoveExpired>(Log::Type::MoveExpired, id, oldPos, newPos));
+  _logQueue.push(makeLogMsg<Log::MoveExpired>(id, oldPos, newPos));
 }
 //-----------------------------------------------------------------------------
-void BoardMng::onWayChosen(uint32_t id, const RookPosition & newPos)
+void BoardManager::onWayChosen(uint32_t id, const RookPosition & newPos, uint32_t movesRemain)
 {
-  _logQueue.push(makeLogMsg<Log::NextPosition>(Log::Type::NextPosition, id, newPos));
+  _logQueue.push(makeLogMsg<Log::NextPosition>(id, newPos, movesRemain));
 }
 //-----------------------------------------------------------------------------
-void BoardMng::spawnRooks(int n)
+void BoardManager::spawnRooks(int count)
 {
   RookPosition basePos;
   uint32_t id = 1;
   std::random_device rd;
 
-  for (uint32_t i = 0; i < n; ++i)
+  for (uint32_t i = 0; i < count; ++i)
   {
     _field[basePos._x][basePos._y] = id;
     std::cout << "Spawn rook with id: " << id << " at " << basePos << std::endl;
 
     auto handler = std::make_unique<RookHandler>(*this, id, basePos, rd());
-    handler->run();
     _activeHandlers.emplace(id, std::move(handler));
 
     // По главной диагонали
@@ -92,9 +94,15 @@ void BoardMng::spawnRooks(int n)
     ++basePos._y;
     ++id;
   }
+
+  // Запускаем потоки
+  for (auto & [_, handler] : _activeHandlers)
+  {
+    handler->run();
+  }
 }
 //-----------------------------------------------------------------------------
-void BoardMng::terminateRook(RookHandlerPtr handler)
+void BoardManager::terminateRook(RookHandlerPtr handler)
 {
   std::cout << "Rook(" << handler->id() << ") is finished, terminate the thread" << std::endl;
   handler->stop();
@@ -108,7 +116,7 @@ void BoardMng::terminateRook(RookHandlerPtr handler)
   }
 }
 //-----------------------------------------------------------------------------
-void BoardMng::runSelf()
+void BoardManager::runSelf()
 {
   while (_run)
   {
@@ -140,7 +148,7 @@ void BoardMng::runSelf()
   }
 }
 //-----------------------------------------------------------------------------
-void BoardMng::processLogMsg(Log::Message msg)
+void BoardManager::processLogMsg(Log::Message msg)
 {
   switch (msg._type)
   {
@@ -160,7 +168,8 @@ void BoardMng::processLogMsg(Log::Message msg)
   case Log::Type::NextPosition:
     {
       auto & mv = std::get<Log::NextPosition>(msg._body);
-      std::cout << "Rook(" << mv._id  << ")'s will go to " << mv._new << std::endl;
+      std::cout << "Rook(" << mv._id  << ")'s will go to " << mv._new
+                << ", moves remain: " << mv._movesRemain << std::endl;
       break;
     }
   default:
@@ -168,7 +177,7 @@ void BoardMng::processLogMsg(Log::Message msg)
   }
 }
 //-----------------------------------------------------------------------------
-bool BoardMng::hasPathCollision(const RookPosition & oldPos, const RookPosition & newPos) const
+bool BoardManager::hasPathCollision(const RookPosition & oldPos, const RookPosition & newPos) const
 {
   if (oldPos._x != newPos._x)
   {

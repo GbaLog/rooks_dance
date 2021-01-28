@@ -1,5 +1,5 @@
-#ifndef BOARDMNG_H
-#define BOARDMNG_H
+#ifndef BOARDMANAGER_H
+#define BOARDMANAGER_H
 //-----------------------------------------------------------------------------
 #include <map>
 #include <mutex>
@@ -14,20 +14,21 @@ struct BoardMngParams
   bool _noField = false;
 };
 //-----------------------------------------------------------------------------
-class BoardMng : public IRookHandlerOwner
+class BoardManager : public IRookHandlerOwner
 {
 public:
-  BoardMng(const BoardMngParams & params);
+  BoardManager(const BoardMngParams & params);
 
   int run();
   void stop();
 
   // IRookHandlerOwner
-  virtual bool tryMoveRook(uint32_t id, const RookPosition & oldPos,
-                           const RookPosition & newPos) override;
-  virtual void onRookFinished(uint32_t id) override;
-  virtual void onMoveExpired(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos) override;
-  virtual void onWayChosen(uint32_t id, const RookPosition & newPos) override;
+  bool tryMoveRook(uint32_t id, const RookPosition & oldPos,
+                   const RookPosition & newPos) override;
+  void onRookFinished(uint32_t id) override;
+  void onMoveExpired(uint32_t id,
+                     const RookPosition & oldPos, const RookPosition & newPos) override;
+  void onWayChosen(uint32_t id, const RookPosition & newPos, uint32_t movesRemain) override;
 
 private:
   int _rookCount;
@@ -43,7 +44,7 @@ private:
   std::mutex _fieldMutex;
   FieldRows _field;
 
-  void spawnRooks(int n);
+  void spawnRooks(int count);
   void terminateRook(RookHandlerPtr handler);
   void runSelf();
   void processLogMsg(Log::Message msg);
@@ -51,5 +52,5 @@ private:
   bool hasPathCollision(const RookPosition & oldPos, const RookPosition & newPos) const;
 };
 //-----------------------------------------------------------------------------
-#endif // BOARDMNG_H
+#endif // BOARDMANAGER_H
 //-----------------------------------------------------------------------------

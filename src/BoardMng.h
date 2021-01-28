@@ -8,10 +8,16 @@
 #include "ConcurrentQueue.h"
 #include "LogMessages.h"
 //-----------------------------------------------------------------------------
+struct BoardMngParams
+{
+  int _rookCount = 6;
+  bool _noField = false;
+};
+//-----------------------------------------------------------------------------
 class BoardMng : public IRookHandlerOwner
 {
 public:
-  BoardMng(int argc, char ** argv);
+  BoardMng(const BoardMngParams & params);
 
   int run();
   void stop();
@@ -24,7 +30,8 @@ public:
   virtual void onWayChosen(uint32_t id, const RookPosition & newPos) override;
 
 private:
-  uint32_t _rookCount;
+  int _rookCount;
+  bool _noField;
   bool _run;
   using RookHandlerPtr = std::unique_ptr<RookHandler>;
   using MapIdToRookHandler = std::map<uint32_t, RookHandlerPtr>;
@@ -36,8 +43,7 @@ private:
   std::mutex _fieldMutex;
   FieldRows _field;
 
-  void parseArgs(int argc, char ** argv);
-  void spawnRooks(uint32_t n);
+  void spawnRooks(int n);
   void terminateRook(RookHandlerPtr handler);
   void runSelf();
   void processLogMsg(Log::Message msg);

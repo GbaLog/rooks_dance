@@ -18,13 +18,12 @@ Log::Message makeLogMsg(Log::Type type, Args &&... args)
 //-----------------------------------------------------------------------------
 } // namespace
 //-----------------------------------------------------------------------------
-BoardMng::BoardMng(int argc, char ** argv) :
-  _rookCount(0),
-  _run(false),
+BoardMng::BoardMng(const BoardMngParams & params) :
+  _rookCount{params._rookCount},
+  _noField{params._noField},
+  _run{false},
   _field{}
-{
-  parseArgs(argc, argv);
-}
+{}
 //-----------------------------------------------------------------------------
 int BoardMng::run()
 {
@@ -73,22 +72,7 @@ void BoardMng::onWayChosen(uint32_t id, const RookPosition & newPos)
   _logQueue.push(makeLogMsg<Log::NextPosition>(Log::Type::NextPosition, id, newPos));
 }
 //-----------------------------------------------------------------------------
-void BoardMng::parseArgs(int argc, char ** argv)
-{
-  uint32_t rooksCount = 6;
-
-  if (argc == 2)
-  {
-    rooksCount = std::stoi(argv[1]);
-  }
-
-  if (rooksCount > 6 || rooksCount < 0)
-    rooksCount = 6;
-
-  _rookCount = rooksCount;
-}
-//-----------------------------------------------------------------------------
-void BoardMng::spawnRooks(uint32_t n)
+void BoardMng::spawnRooks(int n)
 {
   RookPosition basePos;
   uint32_t id = 1;
@@ -139,17 +123,21 @@ void BoardMng::runSelf()
     Log::Message msg;
     while (_logQueue.tryPop(msg))
     {
-      changed = true;
+      changed = changed || msg._type == Log::Type::MoveMade;
       processLogMsg(std::move(msg));
     }
 
-    if (changed)
+    if (changed && _noField == false)
     {
-      std::lock_guard lock(_fieldMutex);
-      drawField(_field);
+      FieldRows copy;
+      {
+        std::lock_guard lock(_fieldMutex);
+        copy = _field;
+      }
+      drawField(copy);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 //-----------------------------------------------------------------------------

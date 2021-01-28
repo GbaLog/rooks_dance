@@ -8,7 +8,7 @@ namespace
 {
 //-----------------------------------------------------------------------------
 template<class T, class ... Args>
-Log::Message makeLogMsg(Args &&... args)
+Log::Message makeLogMessage(Args &&... args)
 {
   Log::Message msg;
   msg._type = T::type();
@@ -49,7 +49,7 @@ bool BoardManager::tryMoveRook(uint32_t id, const RookPosition & oldPos, const R
   if (hasPathCollision(oldPos, newPos))
     return false;
 
-  _logQueue.push(makeLogMsg<Log::MoveMade>(id, oldPos, newPos));
+  _logQueue.push(makeLogMessage<Log::MoveMade>(id, oldPos, newPos));
   _field[oldPos._x][oldPos._y] = 0;
   _field[newPos._x][newPos._y] = id;
   return true;
@@ -67,12 +67,12 @@ void BoardManager::onRookFinished(uint32_t id)
 //-----------------------------------------------------------------------------
 void BoardManager::onMoveExpired(uint32_t id, const RookPosition & oldPos, const RookPosition & newPos)
 {
-  _logQueue.push(makeLogMsg<Log::MoveExpired>(id, oldPos, newPos));
+  _logQueue.push(makeLogMessage<Log::MoveExpired>(id, oldPos, newPos));
 }
 //-----------------------------------------------------------------------------
 void BoardManager::onWayChosen(uint32_t id, const RookPosition & newPos, uint32_t movesRemain)
 {
-  _logQueue.push(makeLogMsg<Log::NextPosition>(id, newPos, movesRemain));
+  _logQueue.push(makeLogMessage<Log::NextPosition>(id, newPos, movesRemain));
 }
 //-----------------------------------------------------------------------------
 void BoardManager::spawnRooks(int count)

@@ -106,7 +106,6 @@ void RookHandler::onMoveMade(const TimePointType & now)
 int RookHandler::generateInt(int min, int max)
 {
   std::uniform_int_distribution<> dist(min, max);
-  int res = dist(_rand);
-  return res;
+  return dist(_rand);
 }
 //-----------------------------------------------------------------------------

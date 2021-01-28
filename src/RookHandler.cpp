@@ -1,26 +1,45 @@
 #include "RookHandler.h"
 #include <thread>
 //-----------------------------------------------------------------------------
-RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosition & pos) :
+RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosition & pos, uint32_t seed) :
   _owner(owner),
   _id(id),
+  _run(false),
+  _rand(seed),
   _currentPos(pos),
-  _nextPos(genNextPos()),
-  _movesMade(0),
-  _rand(id)
+  _movesMade(0)
 {}
 //-----------------------------------------------------------------------------
+RookHandler::~RookHandler()
+{
+  if (_run)
+    stop();
+}
+//-----------------------------------------------------------------------------
 void RookHandler::run()
+{
+  _run = true;
+  _nextPos = genNextPos();
+  _workThread = std::thread(&RookHandler::runInThread, this);
+}
+//-----------------------------------------------------------------------------
+void RookHandler::stop()
+{
+  _run = false;
+  _workThread.join();
+}
+//-----------------------------------------------------------------------------
+void RookHandler::runInThread()
 {
   _wholeMoveExpire = std::chrono::steady_clock::now() + std::chrono::seconds(5);
   _moveExpire = std::chrono::steady_clock::now();
 
   auto now = std::chrono::steady_clock::now();
-  while (true)
+  while (_run)
   {
     if (_wholeMoveExpire <= now)
     {
-      genNewPosAndResetTimer(now);
+      onWholeTimerExpired(now);
     }
 
     if (_moveExpire <= now)
@@ -29,9 +48,7 @@ void RookHandler::run()
       // в результате чего она не сможет никогда закончить ходить.
       if (_owner.tryMoveRook(_id, _currentPos, _nextPos))
       {
-        _currentPos = _nextPos;
-        ++_movesMade;
-        genNewPosAndResetTimer(now);
+        onMoveMade(now);
       }
       _moveExpire = now + std::chrono::milliseconds(generateInt(200, 300));
     }
@@ -67,15 +84,30 @@ RookPosition RookHandler::genNextPos()
   return newPos;
 }
 //-----------------------------------------------------------------------------
-void RookHandler::genNewPosAndResetTimer(const TimePointType & now)
+void RookHandler::onWholeTimerExpired(const TimePointType & now)
 {
+  RookPosition newPos = genNextPos();
+  while (newPos == _nextPos)
+    newPos = genNextPos();
+
+  _owner.onMoveExpired(_id, _nextPos, newPos);
+  _nextPos = newPos;
+  _wholeMoveExpire = now + std::chrono::seconds(5);
+}
+//-----------------------------------------------------------------------------
+void RookHandler::onMoveMade(const TimePointType & now)
+{
+  _currentPos = _nextPos;
+  ++_movesMade;
   _nextPos = genNextPos();
   _wholeMoveExpire = now + std::chrono::seconds(5);
+  _owner.onWayChosen(_id, _nextPos);
 }
 //-----------------------------------------------------------------------------
 int RookHandler::generateInt(int min, int max)
 {
   std::uniform_int_distribution<> dist(min, max);
-  return dist(_rand);
+  int res = dist(_rand);
+  return res;
 }
 //-----------------------------------------------------------------------------

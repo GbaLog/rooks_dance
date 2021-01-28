@@ -14,7 +14,8 @@ set(SRC_LIST
 
   ConcurrentQueue.h
   CommonTypes.h
-  FieldDrawer.h)
+  FieldDrawer.h
+  LogMessages.h)
 
 find_package(Threads REQUIRED)
 

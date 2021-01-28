@@ -23,8 +23,10 @@ int BoardMng::run()
       terminateRook(node.key(), std::move(node.mapped()));
     }
 
-    std::shared_lock lock(_fieldMutex);
-    drawField(_field);
+    {
+      std::shared_lock lock(_fieldMutex);
+      drawField(_field);
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }

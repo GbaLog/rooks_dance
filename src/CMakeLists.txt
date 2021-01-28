@@ -12,8 +12,6 @@ set(SRC_LIST
   BoardMng.cpp
   BoardMng.h
 
-  RandUtils.cpp
-  RandUtils.h
   ConcurrentQueue.h
   CommonTypes.h)
 

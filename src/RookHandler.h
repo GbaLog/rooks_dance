@@ -1,6 +1,7 @@
 #ifndef ROOKHANDLER_H
 #define ROOKHANDLER_H
 
+#include <random>
 #include "Rook.h"
 #include "CommonTypes.h"
 
@@ -32,6 +33,7 @@ private:
   RookPosition _currentPos;
   RookPosition _nextPos;
   uint32_t _movesMade;
+  std::mt19937 _rand;
 
   enum
   {
@@ -41,6 +43,7 @@ private:
 
   RookPosition genNextPos();
   void genNewPosAndResetTimer(const TimePointType & now);
+  int generateInt(int min, int max);
 };
 
 #endif // ROOKHANDLER_H

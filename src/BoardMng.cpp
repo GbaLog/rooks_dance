@@ -112,19 +112,18 @@ void BoardMng::runSelf()
 {
   while (_run)
   {
-    RookHandlerPtr handler;
-    if (_terminatingQueue.tryPop(handler))
-    {
-      terminateRook(std::move(handler));
-    }
-
     bool changed = false;
-
     Log::Message msg;
     while (_logQueue.tryPop(msg))
     {
       changed = changed || msg._type == Log::Type::MoveMade;
       processLogMsg(std::move(msg));
+    }
+
+    RookHandlerPtr handler;
+    if (_terminatingQueue.tryPop(handler))
+    {
+      terminateRook(std::move(handler));
     }
 
     if (changed && _noField == false)

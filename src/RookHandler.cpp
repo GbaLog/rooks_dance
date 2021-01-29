@@ -1,6 +1,5 @@
 #include "RookHandler.h"
 #include <thread>
-#include <iostream>
 //-----------------------------------------------------------------------------
 RookHandler::RookHandler(IRookHandlerOwner & owner, uint32_t id, const RookPosition & pos, uint32_t seed) :
   _owner{owner},

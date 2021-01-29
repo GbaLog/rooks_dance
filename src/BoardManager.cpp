@@ -95,6 +95,8 @@ void BoardManager::spawnRooks(int count)
     ++id;
   }
 
+  std::lock_guard lock(_fieldMutex);
+
   // Запускаем потоки
   for (auto & [_, handler] : _activeHandlers)
   {
